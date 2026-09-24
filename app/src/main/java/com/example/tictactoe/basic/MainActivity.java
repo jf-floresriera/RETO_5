@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -26,10 +27,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvStatus;
     private Button mBtnRestart;
     private boolean mGameOver = false;
+    private char mCurrentPlayer = BoardGame.HUMAN_PLAYER; // Used for 2-player mode
 
     static final int DIALOG_DIFFICULTY_ID = 0;
     static final int DIALOG_QUIT_ID = 1;
     static final int DIALOG_ABOUT_ID = 2;
+    static final int DIALOG_MODE_ID = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,33 +61,36 @@ public class MainActivity extends AppCompatActivity {
 
         mBtnRestart.setOnClickListener(v -> startNewGame());
 
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        bottomNav.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.new_game) {
+                startNewGame();
+                return true;
+            } else if (itemId == R.id.game_mode) {
+                showDialog(DIALOG_MODE_ID);
+                return true;
+            } else if (itemId == R.id.ai_difficulty) {
+                if (mGame.getGameMode() == BoardGame.GameMode.TwoPlayer) {
+                    Toast.makeText(this, "Dificultad sólo disponible en 1 Jugador", Toast.LENGTH_SHORT).show();
+                } else {
+                    showDialog(DIALOG_DIFFICULTY_ID);
+                }
+                return true;
+            } else if (itemId == R.id.about) {
+                showDialog(DIALOG_ABOUT_ID);
+                return true;
+            }
+            return false;
+        });
+
         startNewGame();
     }
 
+    // Ya no usamos el menú de arriba en el ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.options_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int itemId = item.getItemId();
-        if (itemId == R.id.new_game) {
-            startNewGame();
-            return true;
-        } else if (itemId == R.id.ai_difficulty) {
-            showDialog(DIALOG_DIFFICULTY_ID);
-            return true;
-        } else if (itemId == R.id.quit) {
-            showDialog(DIALOG_QUIT_ID);
-            return true;
-        } else if (itemId == R.id.about) {
-            showDialog(DIALOG_ABOUT_ID);
-            return true;
-        }
+        // Retornamos falso para que no muestre el menú superior, ya que tenemos el de abajo.
         return false;
     }
 
@@ -94,6 +100,24 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         switch(id) {
+            case DIALOG_MODE_ID:
+                builder.setTitle(R.string.mode_choose);
+                final CharSequence[] modes = {
+                        getResources().getString(R.string.mode_1_player),
+                        getResources().getString(R.string.mode_2_players)};
+
+                int selectedMode = mGame.getGameMode() == BoardGame.GameMode.SinglePlayer ? 0 : 1;
+
+                builder.setSingleChoiceItems(modes, selectedMode, (d, item) -> {
+                    d.dismiss();
+                    if (item == 0) mGame.setGameMode(BoardGame.GameMode.SinglePlayer);
+                    else mGame.setGameMode(BoardGame.GameMode.TwoPlayer);
+                    Toast.makeText(getApplicationContext(), modes[item], Toast.LENGTH_SHORT).show();
+                    startNewGame(); // Start new game when mode changes
+                });
+                dialog = builder.create();
+                break;
+
             case DIALOG_DIFFICULTY_ID:
                 builder.setTitle(R.string.difficulty_choose);
 
@@ -107,30 +131,20 @@ public class MainActivity extends AppCompatActivity {
                 if (current == BoardGame.DifficultyLevel.Easy) selected = 0;
                 else if (current == BoardGame.DifficultyLevel.Harder) selected = 1;
 
-                builder.setSingleChoiceItems(levels, selected,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int item) {
-                                dialog.dismiss(); // Close dialog
-
-                                if (item == 0) mGame.setDifficultyLevel(BoardGame.DifficultyLevel.Easy);
-                                else if (item == 1) mGame.setDifficultyLevel(BoardGame.DifficultyLevel.Harder);
-                                else mGame.setDifficultyLevel(BoardGame.DifficultyLevel.Expert);
-
-                                Toast.makeText(getApplicationContext(), levels[item],
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                builder.setSingleChoiceItems(levels, selected, (d, item) -> {
+                    d.dismiss();
+                    if (item == 0) mGame.setDifficultyLevel(BoardGame.DifficultyLevel.Easy);
+                    else if (item == 1) mGame.setDifficultyLevel(BoardGame.DifficultyLevel.Harder);
+                    else mGame.setDifficultyLevel(BoardGame.DifficultyLevel.Expert);
+                    Toast.makeText(getApplicationContext(), levels[item], Toast.LENGTH_SHORT).show();
+                });
                 dialog = builder.create();
                 break;
 
             case DIALOG_QUIT_ID:
                 builder.setMessage(R.string.quit_question)
                         .setCancelable(false)
-                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                MainActivity.this.finish();
-                            }
-                        })
+                        .setPositiveButton(R.string.yes, (d, which) -> MainActivity.this.finish())
                         .setNegativeButton(R.string.no, null);
                 dialog = builder.create();
                 break;
@@ -150,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
     private void startNewGame() {
         mGame.clearBoard();
         mGameOver = false;
+        mCurrentPlayer = BoardGame.HUMAN_PLAYER;
 
         for (int i = 0; i < mBoardButtons.length; i++) {
             mBoardButtons[i].setText("");
@@ -157,45 +172,71 @@ public class MainActivity extends AppCompatActivity {
             mBoardButtons[i].setTextColor(Color.BLACK);
         }
 
-        mTvStatus.setText(R.string.turn_human);
+        if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
+            mTvStatus.setText(R.string.turn_human);
+        } else {
+            mTvStatus.setText(R.string.turn_human); // Para el modo de 2 jugadores, empieza X
+        }
     }
 
     private void handleHumanMove(int location) {
         if (mGameOver) return;
 
-        if (mGame.setMove(BoardGame.HUMAN_PLAYER, location)) {
-            mBoardButtons[location].setText(String.valueOf(BoardGame.HUMAN_PLAYER));
-            mBoardButtons[location].setTextColor(Color.parseColor("#1E88E5"));
-            mBoardButtons[location].setEnabled(false);
+        if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
+            // LÓGICA DE UN JUGADOR (vs IA)
+            if (mGame.setMove(BoardGame.HUMAN_PLAYER, location)) {
+                setButton(location, BoardGame.HUMAN_PLAYER, "#1E88E5");
 
-            int winner = mGame.checkForWinner();
-            if (winner != 0) {
-                endGame(winner);
-                return;
+                int winner = mGame.checkForWinner();
+                if (winner != 0) {
+                    endGame(winner);
+                    return;
+                }
+
+                mTvStatus.setText(R.string.turn_computer);
+                disableAllBoardButtons();
+
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (mGameOver) return;
+                    int computerMove = mGame.getComputerMove();
+                    if (computerMove != -1 && mGame.setMove(BoardGame.COMPUTER_PLAYER, computerMove)) {
+                        setButton(computerMove, BoardGame.COMPUTER_PLAYER, "#E53935");
+                    }
+
+                    int compWinner = mGame.checkForWinner();
+                    if (compWinner != 0) {
+                        endGame(compWinner);
+                    } else {
+                        mTvStatus.setText(R.string.turn_human);
+                        enableAvailableBoardButtons();
+                    }
+                }, 500);
             }
-
-            // Turno de la IA
-            mTvStatus.setText(R.string.turn_computer);
-            disableAllBoardButtons();
-
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (mGameOver) return;
-                int computerMove = mGame.getComputerMove();
-                if (computerMove != -1 && mGame.setMove(BoardGame.COMPUTER_PLAYER, computerMove)) {
-                    mBoardButtons[computerMove].setText(String.valueOf(BoardGame.COMPUTER_PLAYER));
-                    mBoardButtons[computerMove].setTextColor(Color.parseColor("#E53935"));
-                    mBoardButtons[computerMove].setEnabled(false);
-                }
-
-                int compWinner = mGame.checkForWinner();
-                if (compWinner != 0) {
-                    endGame(compWinner);
+        } else {
+            // LÓGICA DE DOS JUGADORES (Local)
+            if (mGame.setMove(mCurrentPlayer, location)) {
+                if (mCurrentPlayer == BoardGame.HUMAN_PLAYER) {
+                    setButton(location, mCurrentPlayer, "#1E88E5");
+                    mCurrentPlayer = BoardGame.COMPUTER_PLAYER;
+                    mTvStatus.setText(R.string.turn_human_2);
                 } else {
+                    setButton(location, mCurrentPlayer, "#E53935");
+                    mCurrentPlayer = BoardGame.HUMAN_PLAYER;
                     mTvStatus.setText(R.string.turn_human);
-                    enableAvailableBoardButtons();
                 }
-            }, 500);
+
+                int winner = mGame.checkForWinner();
+                if (winner != 0) {
+                    endGame(winner);
+                }
+            }
         }
+    }
+
+    private void setButton(int location, char player, String color) {
+        mBoardButtons[location].setText(String.valueOf(player));
+        mBoardButtons[location].setTextColor(Color.parseColor(color));
+        mBoardButtons[location].setEnabled(false);
     }
 
     private void disableAllBoardButtons() {
@@ -224,7 +265,11 @@ public class MainActivity extends AppCompatActivity {
                 mTvStatus.setText(R.string.result_human_win);
                 break;
             case 3:
-                mTvStatus.setText(R.string.result_computer_win);
+                if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
+                    mTvStatus.setText(R.string.result_computer_win);
+                } else {
+                    mTvStatus.setText(R.string.result_human_2_win);
+                }
                 break;
         }
     }

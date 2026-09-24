@@ -13,15 +13,27 @@ public class BoardGame {
     public static final int BOARD_SIZE = 9;
 
     // The computer's difficulty levels
-    public enum DifficultyLevel {Easy, Harder, Expert};
+    public enum DifficultyLevel {Easy, Harder, Expert}
     // Current difficulty level
     private DifficultyLevel mDifficultyLevel = DifficultyLevel.Expert;
+
+    // Game Mode
+    public enum GameMode {SinglePlayer, TwoPlayer}
+    private GameMode mGameMode = GameMode.SinglePlayer;
 
     private final char[] mBoard = new char[BOARD_SIZE];
     private final Random mRand = new Random();
 
     public BoardGame() {
         clearBoard();
+    }
+
+    public GameMode getGameMode() {
+        return mGameMode;
+    }
+
+    public void setGameMode(GameMode mode) {
+        mGameMode = mode;
     }
 
     public DifficultyLevel getDifficultyLevel() {
