@@ -1,10 +1,10 @@
 package com.example.tictactoe.basic;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,22 +12,24 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
     private BoardGame mGame;
-    private Button[] mBoardButtons;
+    private BoardView mBoardView;
     private TextView mTvStatus;
     private Button mBtnRestart;
     private boolean mGameOver = false;
-    private char mCurrentPlayer = BoardGame.HUMAN_PLAYER; // Used for 2-player mode
+    private char mCurrentPlayer = BoardGame.HUMAN_PLAYER;
 
     static final int DIALOG_DIFFICULTY_ID = 0;
     static final int DIALOG_QUIT_ID = 1;
@@ -42,6 +44,10 @@ public class MainActivity extends AppCompatActivity {
     private int mScoreComputer = 0;
     private int mScoreTies = 0;
 
+    private MediaPlayer mHumanMediaPlayer;
+    private MediaPlayer mComputerMediaPlayer;
+
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,21 +62,10 @@ public class MainActivity extends AppCompatActivity {
         mTvScoreTies = findViewById(R.id.tv_score_ties);
         updateScoreBoard();
 
-        mBoardButtons = new Button[BoardGame.BOARD_SIZE];
-        mBoardButtons[0] = findViewById(R.id.btn_0);
-        mBoardButtons[1] = findViewById(R.id.btn_1);
-        mBoardButtons[2] = findViewById(R.id.btn_2);
-        mBoardButtons[3] = findViewById(R.id.btn_3);
-        mBoardButtons[4] = findViewById(R.id.btn_4);
-        mBoardButtons[5] = findViewById(R.id.btn_5);
-        mBoardButtons[6] = findViewById(R.id.btn_6);
-        mBoardButtons[7] = findViewById(R.id.btn_7);
-        mBoardButtons[8] = findViewById(R.id.btn_8);
+        mBoardView = findViewById(R.id.board);
+        mBoardView.setGame(mGame);
 
-        for (int i = 0; i < mBoardButtons.length; i++) {
-            final int index = i;
-            mBoardButtons[i].setOnClickListener(v -> handleHumanMove(index));
-        }
+        mBoardView.setOnTouchListener(mTouchListener);
 
         mBtnRestart.setOnClickListener(v -> startNewGame());
 
@@ -99,6 +94,45 @@ public class MainActivity extends AppCompatActivity {
 
         startNewGame();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mHumanMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.sword);
+        mComputerMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.swish);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mHumanMediaPlayer != null) {
+            mHumanMediaPlayer.release();
+            mHumanMediaPlayer = null;
+        }
+        if (mComputerMediaPlayer != null) {
+            mComputerMediaPlayer.release();
+            mComputerMediaPlayer = null;
+        }
+    }
+
+    private final View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                // Determine which cell was touched
+                int col = (int) event.getX() / mBoardView.getBoardCellWidth();
+                int row = (int) event.getY() / mBoardView.getBoardCellHeight();
+                int pos = row * 3 + col;
+
+                if (pos >= 0 && pos < BoardGame.BOARD_SIZE && !mGameOver) {
+                    if (mGame.getBoardOccupant(pos) == BoardGame.EMPTY_SPACE) {
+                        handleHumanMove(pos);
+                    }
+                }
+            }
+            return false;
+        }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         Dialog dialog = null;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        switch(id) {
+        switch (id) {
             case DIALOG_MODE_ID:
                 builder.setTitle(R.string.mode_choose);
                 final CharSequence[] modes = {
@@ -150,14 +184,12 @@ public class MainActivity extends AppCompatActivity {
                     if (item == 0) mGame.setGameMode(BoardGame.GameMode.SinglePlayer);
                     else mGame.setGameMode(BoardGame.GameMode.TwoPlayer);
                     Toast.makeText(getApplicationContext(), modes[item], Toast.LENGTH_SHORT).show();
-                    
-                    // Resetear el marcador cuando se cambia de modo
+
                     mScoreHuman = 0;
                     mScoreComputer = 0;
                     mScoreTies = 0;
                     updateScoreBoard();
-                    
-                    startNewGame(); // Start new game when mode changes
+                    startNewGame();
                 });
                 dialog = builder.create();
                 break;
@@ -207,29 +239,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void startNewGame() {
         mGame.clearBoard();
+        mBoardView.invalidate(); // Redraw the board
         mGameOver = false;
         mCurrentPlayer = BoardGame.HUMAN_PLAYER;
-
-        for (int i = 0; i < mBoardButtons.length; i++) {
-            mBoardButtons[i].setText("");
-            mBoardButtons[i].setEnabled(true);
-            mBoardButtons[i].setTextColor(Color.BLACK);
-        }
 
         if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
             mTvStatus.setText(R.string.turn_human);
         } else {
-            mTvStatus.setText(R.string.turn_human); // Para el modo de 2 jugadores, empieza X
+            mTvStatus.setText(R.string.turn_human);
         }
     }
 
     private void handleHumanMove(int location) {
-        if (mGameOver) return;
-
         if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
             // LÓGICA DE UN JUGADOR (vs IA)
-            if (mGame.setMove(BoardGame.HUMAN_PLAYER, location)) {
-                setButton(location, BoardGame.HUMAN_PLAYER, "#1E88E5");
+            if (setMove(BoardGame.HUMAN_PLAYER, location)) {
+                if (mHumanMediaPlayer != null) mHumanMediaPlayer.start();
 
                 int winner = mGame.checkForWinner();
                 if (winner != 0) {
@@ -238,13 +263,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 mTvStatus.setText(R.string.turn_computer);
-                disableAllBoardButtons();
 
+                // Delay the computer's move
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     if (mGameOver) return;
                     int computerMove = mGame.getComputerMove();
-                    if (computerMove != -1 && mGame.setMove(BoardGame.COMPUTER_PLAYER, computerMove)) {
-                        setButton(computerMove, BoardGame.COMPUTER_PLAYER, "#E53935");
+                    if (computerMove != -1 && setMove(BoardGame.COMPUTER_PLAYER, computerMove)) {
+                        if (mComputerMediaPlayer != null) mComputerMediaPlayer.start();
                     }
 
                     int compWinner = mGame.checkForWinner();
@@ -252,19 +277,18 @@ public class MainActivity extends AppCompatActivity {
                         endGame(compWinner);
                     } else {
                         mTvStatus.setText(R.string.turn_human);
-                        enableAvailableBoardButtons();
                     }
-                }, 500);
+                }, 500); // Wait 500ms before making the computer move
             }
         } else {
             // LÓGICA DE DOS JUGADORES (Local)
-            if (mGame.setMove(mCurrentPlayer, location)) {
+            if (setMove(mCurrentPlayer, location)) {
                 if (mCurrentPlayer == BoardGame.HUMAN_PLAYER) {
-                    setButton(location, mCurrentPlayer, "#1E88E5");
+                    if (mHumanMediaPlayer != null) mHumanMediaPlayer.start();
                     mCurrentPlayer = BoardGame.COMPUTER_PLAYER;
                     mTvStatus.setText(R.string.turn_human_2);
                 } else {
-                    setButton(location, mCurrentPlayer, "#E53935");
+                    if (mComputerMediaPlayer != null) mComputerMediaPlayer.start();
                     mCurrentPlayer = BoardGame.HUMAN_PLAYER;
                     mTvStatus.setText(R.string.turn_human);
                 }
@@ -277,26 +301,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setButton(int location, char player, String color) {
-        mBoardButtons[location].setText(String.valueOf(player));
-        mBoardButtons[location].setTextColor(Color.parseColor(color));
-        mBoardButtons[location].setEnabled(false);
-    }
-
-    private void disableAllBoardButtons() {
-        for (Button btn : mBoardButtons) {
-            btn.setEnabled(false);
+    private boolean setMove(char player, int location) {
+        if (mGame.setMove(player, location)) {
+            mBoardView.invalidate(); // Redraw the board
+            return true;
         }
+        return false;
     }
 
-    private void enableAvailableBoardButtons() {
-        for (int i = 0; i < mBoardButtons.length; i++) {
-            if (mGame.getBoardOccupant(i) == BoardGame.EMPTY_SPACE) {
-                mBoardButtons[i].setEnabled(true);
-            }
-        }
-    }
-
+    @SuppressLint("SetTextI18n")
     private void updateScoreBoard() {
         mTvScoreHuman.setText("Jugador 1: " + mScoreHuman);
         if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
@@ -309,7 +322,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void endGame(int winnerCode) {
         mGameOver = true;
-        disableAllBoardButtons();
 
         switch (winnerCode) {
             case 1:

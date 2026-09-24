@@ -98,24 +98,13 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp" />
 
-            <GridLayout
-                android:id="@+id/grid_board"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:rowCount="3"
-                android:columnCount="3"
-                android:layout_gravity="center">
-
-                <Button android:id="@+id/btn_0" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_1" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_2" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_3" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_4" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_5" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_6" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_7" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-                <Button android:id="@+id/btn_8" android:layout_width="85dp" android:layout_height="85dp" android:layout_margin="4dp" android:backgroundTint="#FFFFFF" android:textColor="#333333" android:textSize="32sp" android:textStyle="bold" android:padding="0dp"/>
-            </GridLayout>
+            <com.example.tictactoe.basic.BoardView
+                android:id="@+id/board"
+                android:layout_width="320dp"
+                android:layout_height="320dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="16dp"/>
 
             <Button
                 android:id="@+id/btn_restart"
