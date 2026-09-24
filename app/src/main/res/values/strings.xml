@@ -35,4 +35,5 @@
 
     <!-- About dialog -->
     <string name="about_text">Desarrollado por: Jesús Enrique Flores Riera\n\nAplicación desarrollada como parte del Reto 4. Esta evolución incluye la integración de un menú de opciones (Options Menu), distintos niveles de dificultad mediante una Inteligencia Artificial adaptativa y la implementación interactiva de múltiples cuadros de diálogo (Dialog Boxes).</string>
+    <string name="version_info">Multijugador - Reto 4</string>
 </resources>

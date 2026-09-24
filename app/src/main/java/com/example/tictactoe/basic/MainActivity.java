@@ -34,6 +34,14 @@ public class MainActivity extends AppCompatActivity {
     static final int DIALOG_ABOUT_ID = 2;
     static final int DIALOG_MODE_ID = 3;
 
+    private TextView mTvScoreHuman;
+    private TextView mTvScoreComputer;
+    private TextView mTvScoreTies;
+
+    private int mScoreHuman = 0;
+    private int mScoreComputer = 0;
+    private int mScoreTies = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +50,11 @@ public class MainActivity extends AppCompatActivity {
         mGame = new BoardGame();
         mTvStatus = findViewById(R.id.tv_status);
         mBtnRestart = findViewById(R.id.btn_restart);
+
+        mTvScoreHuman = findViewById(R.id.tv_score_human);
+        mTvScoreComputer = findViewById(R.id.tv_score_computer);
+        mTvScoreTies = findViewById(R.id.tv_score_ties);
+        updateScoreBoard();
 
         mBoardButtons = new Button[BoardGame.BOARD_SIZE];
         mBoardButtons[0] = findViewById(R.id.btn_0);
@@ -113,6 +126,13 @@ public class MainActivity extends AppCompatActivity {
                     if (item == 0) mGame.setGameMode(BoardGame.GameMode.SinglePlayer);
                     else mGame.setGameMode(BoardGame.GameMode.TwoPlayer);
                     Toast.makeText(getApplicationContext(), modes[item], Toast.LENGTH_SHORT).show();
+                    
+                    // Resetear el marcador cuando se cambia de modo
+                    mScoreHuman = 0;
+                    mScoreComputer = 0;
+                    mScoreTies = 0;
+                    updateScoreBoard();
+                    
                     startNewGame(); // Start new game when mode changes
                 });
                 dialog = builder.create();
@@ -253,6 +273,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateScoreBoard() {
+        mTvScoreHuman.setText("Jugador 1: " + mScoreHuman);
+        if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
+            mTvScoreComputer.setText("IA: " + mScoreComputer);
+        } else {
+            mTvScoreComputer.setText("Jugador 2: " + mScoreComputer);
+        }
+        mTvScoreTies.setText("Empates: " + mScoreTies);
+    }
+
     private void endGame(int winnerCode) {
         mGameOver = true;
         disableAllBoardButtons();
@@ -260,9 +290,11 @@ public class MainActivity extends AppCompatActivity {
         switch (winnerCode) {
             case 1:
                 mTvStatus.setText(R.string.result_tie);
+                mScoreTies++;
                 break;
             case 2:
                 mTvStatus.setText(R.string.result_human_win);
+                mScoreHuman++;
                 break;
             case 3:
                 if (mGame.getGameMode() == BoardGame.GameMode.SinglePlayer) {
@@ -270,7 +302,9 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     mTvStatus.setText(R.string.result_human_2_win);
                 }
+                mScoreComputer++;
                 break;
         }
+        updateScoreBoard();
     }
 }
