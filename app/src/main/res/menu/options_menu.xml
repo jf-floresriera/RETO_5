@@ -3,17 +3,17 @@
     <item android:id="@+id/new_game"
         android:title="@string/menu_new_game"
         android:icon="@android:drawable/ic_menu_rotate"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item android:id="@+id/game_mode"
         android:title="@string/menu_mode"
         android:icon="@android:drawable/ic_menu_share"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item android:id="@+id/ai_difficulty"
         android:title="@string/menu_difficulty"
         android:icon="@android:drawable/ic_menu_sort_by_size"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item android:id="@+id/about"
         android:title="@string/menu_about"
         android:icon="@android:drawable/ic_menu_info_details"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 </menu>

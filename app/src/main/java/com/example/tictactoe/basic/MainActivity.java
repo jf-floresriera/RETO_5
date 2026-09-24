@@ -100,10 +100,34 @@ public class MainActivity extends AppCompatActivity {
         startNewGame();
     }
 
-    // Ya no usamos el menú de arriba en el ActionBar
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Retornamos falso para que no muestre el menú superior, ya que tenemos el de abajo.
+        super.onCreateOptionsMenu(menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.new_game) {
+            startNewGame();
+            return true;
+        } else if (itemId == R.id.game_mode) {
+            showDialog(DIALOG_MODE_ID);
+            return true;
+        } else if (itemId == R.id.ai_difficulty) {
+            if (mGame.getGameMode() == BoardGame.GameMode.TwoPlayer) {
+                Toast.makeText(this, "Dificultad sólo disponible en 1 Jugador", Toast.LENGTH_SHORT).show();
+            } else {
+                showDialog(DIALOG_DIFFICULTY_ID);
+            }
+            return true;
+        } else if (itemId == R.id.about) {
+            showDialog(DIALOG_ABOUT_ID);
+            return true;
+        }
         return false;
     }
 
