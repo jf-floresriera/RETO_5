@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name_basic">Tres en Raya (Básico)</string>
+    <string name="title_basic">Tres en Raya - Consola adaptada</string>
+    <string name="turn_human">Tu turno (X)</string>
+    <string name="turn_computer">Turno de la IA (O)...</string>
+    <string name="result_human_win">¡Ganaste! (X)</string>
+    <string name="result_computer_win">¡La IA ganó! (O)</string>
+    <string name="result_tie">¡Es un empate!</string>
+    <string name="restart_game">Reiniciar juego</string>
+
+    <!-- Menu items -->
+    <string name="menu_new_game">New Game</string>
+    <string name="menu_difficulty">Difficulty</string>
+    <string name="menu_about">About</string>
+    <string name="menu_quit">Quit</string>
+
+    <!-- Difficulty dialog -->
+    <string name="difficulty_choose">Choose a difficulty level</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_harder">Harder</string>
+    <string name="difficulty_expert">Expert</string>
+
+    <!-- Quit dialog -->
+    <string name="quit_question">Are you sure you want to quit?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!-- About dialog -->
+    <string name="about_text">Desarrollador Experto - Reto 4 (Tres en Raya con Menús y Diálogos)</string>
+</resources>
