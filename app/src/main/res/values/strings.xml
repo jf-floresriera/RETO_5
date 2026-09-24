@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name_basic">Tres en Raya (Básico)</string>
+    <string name="app_name_basic">Tres en Raya - Reto 4</string>
     <string name="title_basic">Tres en Raya - Consola adaptada</string>
     <string name="turn_human">Tu turno (X)</string>
     <string name="turn_computer">Turno de la IA (O)...</string>
@@ -26,5 +26,5 @@
     <string name="no">No</string>
 
     <!-- About dialog -->
-    <string name="about_text">Desarrollador Experto - Reto 4 (Tres en Raya con Menús y Diálogos)</string>
+    <string name="about_text">Desarrollado por: Jesús Enrique Flores Riera\n\nAplicación desarrollada como parte del Reto 4. Esta evolución incluye la integración de un menú de opciones (Options Menu), distintos niveles de dificultad mediante una Inteligencia Artificial adaptativa y la implementación interactiva de múltiples cuadros de diálogo (Dialog Boxes).</string>
 </resources>
